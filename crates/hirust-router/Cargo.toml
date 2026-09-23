@@ -1,0 +1,11 @@
+[package]
+name = "hirust-router"
+description = "Declarative route registration runtime for actix-web, ported from github.com/dunpju/hirust-router"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+actix-web.workspace = true
+inventory.workspace = true
+hirust-router-macro.workspace = true

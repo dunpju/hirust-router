@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/hirust-router-macro",
+    "crates/hirust-router",
+    "examples/demo-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+actix-web = "4"
+inventory = "0.3"
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+hirust-router-macro = { path = "crates/hirust-router-macro" }
+hirust-router = { path = "crates/hirust-router" }
