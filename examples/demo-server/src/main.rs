@@ -40,6 +40,19 @@ async fn main() -> std::io::Result<()> {
     let _ = App::new().configure(|cfg| hirust_router::configure_with(cfg, &config));
     hirust_router::print_route_table();
 
+    // 外部路由节点查找（对应 Go Trie.Search / Routes.Route / Routes.Exist）
+    match hirust_router::search("PUT", "/api/v1/user/42") {
+        Some(hit) => println!(
+            "search PUT /api/v1/user/42 -> {} (tag: {}, auth: {}, params: {:?})",
+            hit.route.absolute_path, hit.route.tag, hit.route.auth, hit.params
+        ),
+        None => println!("search PUT /api/v1/user/42 -> not found"),
+    }
+    println!(
+        "exist GET /api/v1/user/42 -> {}",
+        hirust_router::exist("GET", "/api/v1/user/42")
+    );
+
     let state = AppState::default();
     println!("listening on http://127.0.0.1:8080");
 

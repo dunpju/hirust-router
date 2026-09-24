@@ -227,12 +227,33 @@ inventory::iter::<RouteEntry>                    // ① 收集全部路由元数
 `RouteEntry.order = line!()` + 模块名做稳定排序键，路由表输出按
 `(模块, 行号)` 排序，保证可复现（对应 `Sort` 的保序职责）。
 
-### 4.3 Trie 冲突检测（hirust_router::trie）
+### 4.3 Trie：注册期冲突检测 + 运行期查找（hirust_router::trie）
 
-actix 运行时自带路由匹配，无需 Go 版 Trie 的查找功能；但保留其**注册期职责**：
-按 method 为根、path 段为节点的简化前缀树，`insert` 重复即
-`panic!("route {method}:{path} already exist")`，逐字节对应 Go 行为。
-（参数段占位符统一归一为 `{param}` 后比较，`:id` 与 `{id}` 视为同一位置。）
+完整迁移 Go 版 Trie 的双重职责，泛型 `Trie<T>`（节点负载 `T`，
+registry 中承载路由表索引，对应 Go `Node.Route` 指向的 `*Route`）：
+
+1. **注册期冲突检测**：按 method 为根、`/` 分段建树，`insert` 时终端
+   已存在直接 `panic!("route {}:{} already exist")`；同一位置的参数段共享节点
+   —— `/head_test/{id}` 与 `/head_test/{name}` 视为同一路径而冲突
+   （与 Go 版 ParamMap 行为一致）；
+2. **运行期路由查找** `search(method, url)`（对应 Go `Trie.Search`）：
+   按注册模式匹配具体 URL，字面量段精确匹配、**字面量优先于参数段**、
+   参数段 `{id}`/`:id` 匹配任意单个段并提取实际值。
+
+对外查找 API（registry 层，对应 Go `Routes.Search/Route/Exist`）：
+
+```rust
+// configure 之后即可调用（configure 时构建查找索引）
+if let Some(hit) = hirust_router::search("PUT", "/api/v1/user/42") {
+    hit.route.absolute_path;   // "/api/v1/user/{id}"（命中的注册模式）
+    hit.route.tag;             // "UserController.Update"
+    hit.params;                // [("id", "42")]
+}
+hirust_router::exist("GET", "/api/v1/user/42");  // false（该路径无 GET 路由）
+```
+
+actix 内部的请求分发仍由框架自身完成；`search` 供业务侧主动查询路由节点
+（权限校验、灰度判断、API 网关元数据等场景）。
 
 ---
 
@@ -292,6 +313,8 @@ configure 时冻结为免锁快照（对应 Go"启动时一次性收集"）。
 | `addGroup` 嵌套前缀/继承 | `add_group(segment, parent, ...)` | 保存-恢复语义 → parent 链 |
 | `GlobalGroupPrefix/ApiPrefix/IsAuth` | `RouterConfig` | 全局前缀与鉴权 |
 | `Trie.insert` 冲突 panic | `trie.rs` 注册期冲突检测 panic | 同款错误信息 |
+| `Trie.Search` / `Routes.Search` / `Routes.Route` | `hirust_router::search(method, url)` 返回命中路由 + 参数实际值 | 供外部查找路由节点 |
+| `Routes.Exist` | `hirust_router::exist(method, url)` | URL 可含实际参数值 |
 | `onlySupportMethods` 校验 | 宏层面 method 固定 + 运行期白名单 | |
 | `Route.absolutePath` | configure 时 `global_prefix + global_api_prefix + group + path` | |
 | `Unique(method, path)` / `UniMd5` | `RouteInfo::unique()` = `"METHOD@path"`（md5 特性可选） | |

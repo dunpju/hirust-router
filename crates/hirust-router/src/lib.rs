@@ -55,7 +55,7 @@ pub use middleware::{
     BoxMiddlewareFuture, SimpleMiddleware,
 };
 pub use registry::{
-    configure, configure_named, configure_with, print_route_table, route_table,
-    RouterConfig, ONLY_SUPPORT_METHODS,
+    configure, configure_named, configure_with, exist, print_route_table, route_table,
+    search, RouterConfig, SearchResult, ONLY_SUPPORT_METHODS,
 };
 pub use route::{unique, RouteInfo};

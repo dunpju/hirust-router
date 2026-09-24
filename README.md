@@ -55,6 +55,23 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
+## 外部路由查找
+
+对应 Go 版 `Trie.Search` / `Routes.Search` / `Routes.Route` / `Routes.Exist`，
+`configure` 之后即可按具体 URL（参数段自动提取实际值）查询路由节点：
+
+```rust
+if let Some(hit) = hirust_router::search("PUT", "/api/v1/user/42") {
+    hit.route.absolute_path;   // "/api/v1/user/{id}"（命中的注册模式）
+    hit.route.tag;             // "UserController.Update"
+    hit.route.auth;            // 鉴权标记
+    hit.params;                // [("id", "42")]
+}
+hirust_router::exist("GET", "/api/v1/user/42");  // false
+```
+
+匹配规则：字面量段精确匹配且优先于参数段；`{id}` / `:id` 匹配任意单个 URL 段。
+
 ## Workspace 结构
 
 - `crates/hirust-router-macro` — proc-macro：参数解析 + 代码生成

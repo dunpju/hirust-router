@@ -63,6 +63,8 @@ struct PlannedRoute {
 
 static PLAN: OnceLock<Vec<PlannedRoute>> = OnceLock::new();
 static TABLE: OnceLock<Vec<RouteInfo>> = OnceLock::new();
+/// 运行期查找索引（对应 Go Trie 的运行期职责）：终端负载 = TABLE 的下标
+static SEARCH: OnceLock<Trie<usize>> = OnceLock::new();
 
 /// 构建注册计划：校验 + 前缀拼接 + 冲突检测（每个进程只执行一次）。
 fn build_plan(config: &RouterConfig) -> Vec<PlannedRoute> {
@@ -74,7 +76,7 @@ fn build_plan(config: &RouterConfig) -> Vec<PlannedRoute> {
     entries.sort_by(|a, b| (a.order.1, a.order.0).cmp(&(b.order.1, b.order.0)));
 
     let mut tags: Vec<&str> = Vec::new();
-    let mut trie = Trie::new();
+    let mut trie: Trie<()> = Trie::new();
     let mut plan = Vec::new();
 
     for entry in entries {
@@ -126,7 +128,7 @@ fn build_plan(config: &RouterConfig) -> Vec<PlannedRoute> {
         }
 
         // (method, absolutePath) 冲突检测（对应 Go Trie.insert 的 already exist panic）
-        trie.insert(&method, &full_path);
+        trie.insert(&method, &full_path, ());
 
         plan.push(PlannedRoute {
             method,
@@ -173,6 +175,14 @@ pub fn configure_with(cfg: &mut ServiceConfig, config: &RouterConfig) {
             })
             .collect()
     });
+    // 运行期查找索引：模式终端 → 路由表下标（幂等，仅首个 worker 构建）
+    let _ = SEARCH.get_or_init(|| {
+        let mut trie = Trie::new();
+        for (index, route) in plan.iter().enumerate() {
+            trie.insert(&route.method, &route.full_path, index);
+        }
+        trie
+    });
 
     // 按 full_path 分组合并：同路径的各方法挂到同一个 web::Resource，
     // 规避 actix "同 path 多 resource" 冲突；各方法自带独立的中间件链。
@@ -194,6 +204,39 @@ pub fn configure_named(service: &str, cfg: &mut ServiceConfig, config: &RouterCo
     let mut config = config.clone();
     config.service = service.to_string();
     configure_with(cfg, &config);
+}
+
+/// 外部路由查找结果（对应 Go `Trie.Search` 返回的 `*Node`：节点 + Route）。
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    /// 命中的路由元数据（对应 Node.Route）
+    pub route: RouteInfo,
+    /// 路径参数实际值，如 `/api/v1/user/{id}` 匹配 `/api/v1/user/42` → `[("id", "42")]`
+    pub params: Vec<(String, String)>,
+}
+
+/// 外部路由查找（对应 Go `Routes.Search` / `Routes.Route`）：
+/// 按注册模式匹配具体 URL，参数段 `{id}` / `:id` 提取实际值。
+/// 需在 `configure` 之后调用（configure 时构建查找索引）；未命中返回 None。
+///
+/// ```ignore
+/// if let Some(hit) = hirust_router::search("PUT", "/api/v1/user/42") {
+///     // hit.route.absolute_path == "/api/v1/user/{id}"
+///     // hit.route.tag / hit.route.auth / hit.route.middleware_names ...
+///     // hit.params == [("id", "42")]
+/// }
+/// ```
+pub fn search(method: &str, url: &str) -> Option<SearchResult> {
+    let trie = SEARCH.get()?;
+    let table = TABLE.get()?;
+    let hit = trie.search(method, url)?;
+    let route = table.get(*hit.value).cloned()?;
+    Some(SearchResult { route, params: hit.params.clone() })
+}
+
+/// 路由是否存在（URL 可含实际参数值；对应 Go `Routes.Exist`）。
+pub fn exist(method: &str, url: &str) -> bool {
+    search(method, url).is_some()
 }
 
 /// 已注册路由表（对应 Go `GetRoutes(name).ForEach`）。
