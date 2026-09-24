@@ -189,7 +189,10 @@ pub async fn my_middleware(req: HttpRequest) -> Result<HttpRequest, actix_web::E
 
 - 路由级（`middleware = {...}`）：宏编译期直接内联调用上述 async fn，零装箱开销；
 - 全局/分组级（运行期注册表，函数指针存储）：
-  `type SimpleMiddleware = fn(HttpRequest) -> Pin<Box<dyn Future<...> + Send>>`，
+  `type SimpleMiddleware = fn(HttpRequest) -> Pin<Box<dyn Future<...>>>`
+  （**不加 `+ Send`**：`HttpRequest` 内部为 `Rc`，加 Send 会导致任何真实持有
+  请求的 `boxed_middleware!` 闭包无法编译；actix handler 运行在 worker 单线程
+  arbiter 上本就无 Send 要求），
   用 `hirust_router::boxed_middleware!(async_fn)` 把普通 async fn 适配过去。
 
 ---

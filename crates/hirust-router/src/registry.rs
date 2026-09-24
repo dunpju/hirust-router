@@ -270,14 +270,7 @@ pub fn print_route_table() {
     );
     println!("{}", "-".repeat(150));
     for info in &table {
-        println!(
-            "{:<7} {:<40} {:<56} {:<6} {}",
-            info.method,
-            info.absolute_path,
-            info.tag,
-            if info.auth { "true" } else { "false" },
-            info.middleware_names.join(",")
-        );
+        println!("{}", info.to_row());
     }
     println!("{}", "-".repeat(150));
     println!("total: {} routes", table.len());

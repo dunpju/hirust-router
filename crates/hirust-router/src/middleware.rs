@@ -31,8 +31,11 @@ use actix_web::Error;
 use crate::group;
 
 /// 装箱 future 简写（运行期全局/分组中间件使用）。
+/// 注意不加 `+ Send`：`HttpRequest` 内部为 `Rc`（`!Send`），而 actix 的 handler
+/// 运行在 worker 单线程 arbiter 上本就无 Send 要求——加 Send 会导致任何真实
+/// 持有请求的 `boxed_middleware!` 闭包无法编译。
 pub type BoxMiddlewareFuture =
-    Pin<Box<dyn Future<Output = Result<HttpRequest, Error>> + Send>>;
+    Pin<Box<dyn Future<Output = Result<HttpRequest, Error>> + 'static>>;
 
 /// 运行期（全局/分组）简单中间件：`fn(HttpRequest) -> boxed future`。
 /// 编译期（路由级）中间件无需装箱 —— 由宏直接内联调用用户 async fn。
@@ -41,7 +44,7 @@ pub type SimpleMiddleware = fn(HttpRequest) -> BoxMiddlewareFuture;
 /// 把具体 future 装箱（配合 [`crate::boxed_middleware!`] 使用）。
 pub fn box_future<F>(fut: F) -> BoxMiddlewareFuture
 where
-    F: Future<Output = Result<HttpRequest, Error>> + Send + 'static,
+    F: Future<Output = Result<HttpRequest, Error>> + 'static,
 {
     Box::pin(fut)
 }

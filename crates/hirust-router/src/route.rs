@@ -108,12 +108,11 @@ impl RouteInfo {
             self.method.clone()
         };
         format!(
-            "{:<7} {:<40} {:<56} {:<8} {:<6} {}",
+            "{:<7} {:<40} {:<56} {:<6} {}",
             method,
             self.absolute_path,
             self.tag,
             if self.auth { "true" } else { "false" },
-            "",
             self.middleware_names.join(",")
         )
     }
