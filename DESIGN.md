@@ -131,6 +131,7 @@ async fn info(req: HttpRequest, msg: Option<ReqData<Option<UserInfo>>>,
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),  // 保序键，对应 Go Sort
         attach: __hirust_attach_info,          // 类型化的路由挂载函数
+        is_ws: false,                          // 是否 WebSocket 升级路由（见 §7 IsWs）
     }
 }
 
@@ -325,7 +326,7 @@ configure 时冻结为免锁快照（对应 Go"启动时一次性收集"）。
 | `Route.serve` / `Serve` 多服务 | `RouteInfo.service` 标签 + `configure_named(service, cfg)` | 单 App 下退化为标签（见 §8） |
 | `Routes.ForEach` 路由表 | `route_table()` / `print_route_table()` | 按 order 排序输出 |
 | `:id` 参数段 | 自动改写 `{id}` | 风格兼容 |
-| `IsWs` / `Ws()` | 不迁移（actix 有独立 WebSocket 生态） | 明确列为范围外 |
+| `IsWs` / `Ws()` | `RouteEntry`/`RouteInfo` 的 `is_ws` 字段（router 自身宏恒 `false`） | hirust-router 不实现 WS 逻辑；配套的 hirust-wsock（WebSocket 脚手架）`#[WsMapping]` 向同一 inventory 提交 `is_ws: true` 条目（attach 挂 actix-ws 握手），复用同一套路由表/冲突检测/前缀拼接，路由表 WS 行显示 `GET(WS)` |
 | `IsStatic` / `SetHeader` | 不迁移（actix 静态文件服务/响应头有原生方案） | 列为范围外 |
 | `Routes.Get(...)` 等运行期链式手动注册 | 不提供：attach 需编译期类型化，无法运行期构造 | 用户可在自己的 configure 闭包内添加原生 actix 路由 |
 
@@ -346,7 +347,11 @@ configure 时冻结为免锁快照（对应 Go"启动时一次性收集"）。
    直接添加原生 actix 路由（与 `hirust_router::configure` 并存不冲突）；
 6. **组级数据鉴权继承未迁移**：`is_data_auth` 仅路由级元数据
    （Go 版 `GlobalGroupIsDataAuth` / `addGroup(IsDataAuth)` 的继承链未迁移）；
-7. WebSocket、静态文件路由不迁移（actix 生态有专门方案）。
+7. WebSocket、静态文件路由不由 hirust-router 实现（actix 生态有专门方案）；
+   但为配套的 hirust-wsock 预留了 `RouteEntry.is_ws` 元数据字段与挂载点：
+   WS 路由条目由 hirust-wsock 的 `#[WsMapping]` 提交（`is_ws: true`，
+   `attach` 挂载 actix-ws 握手），与本库路由进入同一张路由表；
+   静态文件仍列为范围外。
 
 ## 9. 示例用法（速览）
 

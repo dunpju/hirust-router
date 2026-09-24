@@ -390,6 +390,7 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
                 cancel_global_api_prefix: #cgap,
                 order: (::core::line!(), ::core::module_path!()),
                 attach: #attach_ident,
+                is_ws: false,
             }
         }
     }
@@ -488,6 +489,7 @@ fn __hirust_attach_info(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_info,
+        is_ws: false,
     }
 }
 ```
@@ -557,6 +559,7 @@ fn __hirust_attach_login(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_login,
+        is_ws: false,
     }
 }
 ```
@@ -628,6 +631,7 @@ fn __hirust_attach_update(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_update,
+        is_ws: false,
     }
 }
 ```
@@ -693,6 +697,7 @@ fn __hirust_attach_delete(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_delete,
+        is_ws: false,
     }
 }
 ```
@@ -754,6 +759,7 @@ fn __hirust_attach_ping(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_ping,
+        is_ws: false,
     }
 }
 ```
@@ -818,6 +824,7 @@ fn __hirust_attach_patch(res: ::actix_web::Resource) -> ::actix_web::Resource {
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_patch,
+        is_ws: false,
     }
 }
 ```
@@ -879,6 +886,7 @@ fn __hirust_attach_preflight(res: ::actix_web::Resource) -> ::actix_web::Resourc
         cancel_global_api_prefix: false,
         order: (::core::line!(), ::core::module_path!()),
         attach: __hirust_attach_preflight,
+        is_ws: false,
     }
 }
 ```

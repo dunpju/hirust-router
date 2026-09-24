@@ -78,6 +78,15 @@ hirust_router::exist("GET", "/api/v1/user/42");  // false
 
 匹配规则：字面量段精确匹配且优先于参数段；`{id}` / `:id` 匹配任意单个 URL 段。
 
+## WebSocket 路由（is_ws）
+
+`RouteEntry` / `RouteInfo` 提供 `is_ws` 元数据字段（对应 Go 版 `IsWs` 属性）：
+hirust-router 自身的 Mapping 宏恒为 `false`；配套的
+[hirust-wsock](../hirust-wsock)（WebSocket 脚手架，基于 actix-ws）通过
+`#[WsMapping]` 向同一 inventory 提交 `is_ws: true` 的条目（`attach` 挂载
+actix-ws 握手），从而复用同一套路由表、冲突检测与前缀拼接——路由表中
+WS 行的方法列显示为 `GET(WS)`。
+
 ## Workspace 结构
 
 - `crates/hirust-router-macro` — proc-macro：参数解析 + 代码生成

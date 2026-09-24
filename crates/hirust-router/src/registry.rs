@@ -60,6 +60,8 @@ struct PlannedRoute {
     front_path: String,
     is_data_auth: bool,
     auth: bool,
+    /// 是否 WebSocket 升级路由（透传 RouteEntry.is_ws）
+    is_ws: bool,
     service: String,
     middleware_names: Vec<String>,
     attach: fn(Resource) -> Resource,
@@ -145,6 +147,7 @@ fn build_plan(config: &RouterConfig) -> Vec<PlannedRoute> {
             front_path: entry.front_path.to_string(),
             is_data_auth: entry.is_data_auth.unwrap_or(false),
             auth,
+            is_ws: entry.is_ws,
             service: config.service.clone(),
             middleware_names: entry
                 .middleware_names
@@ -182,6 +185,7 @@ pub fn configure_with(cfg: &mut ServiceConfig, config: &RouterConfig) {
                 front_path: route.front_path.clone(),
                 is_data_auth: route.is_data_auth,
                 auth: route.auth,
+                is_ws: route.is_ws,
                 service: route.service.clone(),
                 middleware_names: route.middleware_names.clone(),
             })

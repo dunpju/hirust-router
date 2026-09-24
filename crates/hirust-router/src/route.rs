@@ -42,6 +42,10 @@ pub struct RouteEntry {
     pub order: (u32, &'static str),
     /// 类型化挂载函数：把该路由的 method+handler（含中间件链）挂到 Resource 上
     pub attach: fn(Resource) -> Resource,
+    /// 是否 WebSocket 升级路由（对应 Go 版 IsWs 属性）。
+    /// hirust-router 自身的 Mapping 宏恒为 false；hirust-wsock 的 `#[WsMapping]`
+    /// 提交的条目为 true（attach 挂载 actix-ws 握手而非普通 handler）。
+    pub is_ws: bool,
 }
 
 // inventory 收集入口：宏生成的 submit 均提交此类型
@@ -77,6 +81,8 @@ pub struct RouteInfo {
     /// 数据权限（对应 Route.isDataAuth）
     pub is_data_auth: bool,
     pub auth: bool,
+    /// 是否 WebSocket 升级路由（对应 Go Route.isWs；路由表显示为 `GET(WS)`）
+    pub is_ws: bool,
     /// 服务名（对应 Route.serve；单 App 下为标签，取首个 configure 的配置）
     pub service: String,
     pub middleware_names: Vec<String>,
@@ -95,9 +101,15 @@ impl RouteInfo {
 
     /// 单行文本（打印路由表用）
     pub fn to_row(&self) -> String {
+        // ws 行方法列显示 GET(WS)（恰 7 字符，与 HTTP 方法列宽一致）
+        let method = if self.is_ws {
+            format!("{}(WS)", self.method)
+        } else {
+            self.method.clone()
+        };
         format!(
             "{:<7} {:<40} {:<56} {:<8} {:<6} {}",
-            self.method,
+            method,
             self.absolute_path,
             self.tag,
             if self.auth { "true" } else { "false" },
