@@ -1,9 +1,13 @@
 [package]
 name = "hirust-router"
-description = "Declarative route registration runtime for actix-web, ported from github.com/dunpju/hirust-router"
+description = "Declarative route registration for actix-web: annotate async handlers with mapping macros; middleware chains, groups, auth, route table and lookup included"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+readme = "../../README.md"
+keywords = ["actix-web", "router", "routing", "middleware", "declarative"]
+categories = ["web-programming::http-server"]
 
 [dependencies]
 actix-web.workspace = true

@@ -10,6 +10,7 @@ members = [
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+repository = "https://github.com/dunpju/hirust-router"
 
 [workspace.dependencies]
 actix-web = "4"
@@ -17,5 +18,5 @@ inventory = "0.3"
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
-hirust-router-macro = { path = "crates/hirust-router-macro" }
-hirust-router = { path = "crates/hirust-router" }
+hirust-router-macro = { version = "0.1.0", path = "crates/hirust-router-macro" }
+hirust-router = { version = "0.1.0", path = "crates/hirust-router" }

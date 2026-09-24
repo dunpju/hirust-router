@@ -1,9 +1,13 @@
 [package]
 name = "hirust-router-macro"
-description = "Declarative route-registration attribute macros for actix-web, ported from github.com/dunpju/hirust-router"
+description = "Attribute macros (GetMapping/PostMapping/PutMapping/DeleteMapping/HeadMapping/...) for declarative route registration on actix-web"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+readme = "../../README.md"
+keywords = ["actix-web", "router", "routing", "proc-macro", "attribute-macro"]
+categories = ["development-tools::procedural-macro-helpers"]
 
 [lib]
 proc-macro = true
