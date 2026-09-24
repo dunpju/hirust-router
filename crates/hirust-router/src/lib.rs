@@ -40,6 +40,8 @@ pub mod registry;
 pub mod route;
 pub mod trie;
 
+mod md5;
+
 pub use inventory as __inventory;
 
 // 五个 Mapping 宏（及 Go 版同源的 Patch/Options）
@@ -58,4 +60,4 @@ pub use registry::{
     configure, configure_named, configure_with, exist, print_route_table, route_table,
     search, RouterConfig, SearchResult, ONLY_SUPPORT_METHODS,
 };
-pub use route::{unique, RouteInfo};
+pub use route::{uni_md5, unique, RouteInfo};

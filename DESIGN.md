@@ -305,7 +305,10 @@ configure 时冻结为免锁快照（对应 Go"启动时一次性收集"）。
 | `router.Get(path, handler, attrs...)` | `#[GetMapping(path = "...", ...)] async fn ...` | Post/Put/Delete/Head 同理五宏（另附 Patch/Options） |
 | `router.AddRoute(method, ...)` | 宏内 method 固定；泛型 method 不单独提供（新增宏入口即可） | |
 | `router.Flag("x")` | `tag = "x"` | 唯一标识，重复 panic |
-| `router.Desc("x")` / `Title` | `desc = "x"` | 接口描述 |
+| `router.Desc("x")` | `desc = "x"` | 接口描述 |
+| `router.Title("x")` | `title = "x"` | 标题（元数据，供 API 文档/菜单生成） |
+| `router.FrontPath("/login")` | `front_path = "/login"` | 前端菜单路由（元数据） |
+| `router.IsDataAuth(true)` | `is_data_auth = true`（缺省 false） | 数据权限标记（元数据；Go 组级数据鉴权继承未迁移） |
 | `router.IsAuth(true/false)` | `auth = true/false` | 鉴权开关 + 元数据 |
 | `router.Middleware(f1, f2)` | `middleware = {f1, f2}` | 编译期内联进 handler 链 |
 | `router.GroupMiddle(...)` | `add_group(..., middleware, ...)` | 组级中间件 |
@@ -317,22 +320,33 @@ configure 时冻结为免锁快照（对应 Go"启动时一次性收集"）。
 | `Routes.Exist` | `hirust_router::exist(method, url)` | URL 可含实际参数值 |
 | `onlySupportMethods` 校验 | 宏层面 method 固定 + 运行期白名单 | |
 | `Route.absolutePath` | configure 时 `global_prefix + global_api_prefix + group + path` | |
-| `Unique(method, path)` / `UniMd5` | `RouteInfo::unique()` = `"METHOD@path"`（md5 特性可选） | |
-| `Serve`/`Routes` 多服务 | `configure_named(service, cfg)` 具名服务 | |
+| `Unique(method, path)` | `unique(method, path)` / `RouteInfo::unique()` = `"METHOD@path"` | |
+| `UniMd5(method, path)` | `uni_md5(method, path)`（RFC 1321 内置实现，含标准测试向量） | 前端权限码常用 |
+| `Route.serve` / `Serve` 多服务 | `RouteInfo.service` 标签 + `configure_named(service, cfg)` | 单 App 下退化为标签（见 §8） |
 | `Routes.ForEach` 路由表 | `route_table()` / `print_route_table()` | 按 order 排序输出 |
 | `:id` 参数段 | 自动改写 `{id}` | 风格兼容 |
 | `IsWs` / `Ws()` | 不迁移（actix 有独立 WebSocket 生态） | 明确列为范围外 |
-| `IsStatic` / `SetHeader` / `FrontPath` / `IsDataAuth` | 未迁移（actix 静态服务/响应头有原生方案） | 列为范围外 |
+| `IsStatic` / `SetHeader` | 不迁移（actix 静态文件服务/响应头有原生方案） | 列为范围外 |
+| `Routes.Get(...)` 等运行期链式手动注册 | 不提供：attach 需编译期类型化，无法运行期构造 | 用户可在自己的 configure 闭包内添加原生 actix 路由 |
 
 ## 8. 已知差异与限制
 
 1. **注册时机的顺序**：Go 靠代码执行顺序保序；Rust inventory 跨 crate 顺序不保证，
    用 `line!()` + 模块名排序，路由表输出顺序稳定但不等于声明顺序；
-2. **运行时路由匹配**交给 actix（Go 版自研 Trie 只保留注册期冲突检测职责）；
+2. **请求分发由 actix 完成**；`hirust_router::search()/exist()` 提供业务侧
+   主动查找（对应 Go `Trie.Search`），但不参与请求分发；
 3. **中间件链在 handler 内执行**（非 `wrap` Transform），语义对应 Go 版函数链；
    需要 Transform 级能力（如请求日志计时包裹整个 service）时，可直接在
    `App::new().wrap(...)` 使用 actix 原生中间件，两者不冲突；
-4. WebSocket、静态文件路由不迁移（actix 生态有专门方案）。
+4. **多 Serve 独立路由集退化**：Go 的 `AddServe("https")` 可持有独立路由集；
+   Rust 版单 App 单端口，`configure_named` 仅作为 `RouteInfo.service` 标签，
+   所有声明式路由进入同一张路由表；
+5. **运行期手动注册不提供**：`Routes.Get(...)` 等链式运行期注册需要编译期
+   类型化 attach 函数，无法运行期构造；替代方案是在自己的 configure 闭包内
+   直接添加原生 actix 路由（与 `hirust_router::configure` 并存不冲突）；
+6. **组级数据鉴权继承未迁移**：`is_data_auth` 仅路由级元数据
+   （Go 版 `GlobalGroupIsDataAuth` / `addGroup(IsDataAuth)` 的继承链未迁移）；
+7. WebSocket、静态文件路由不迁移（actix 生态有专门方案）。
 
 ## 9. 示例用法（速览）
 

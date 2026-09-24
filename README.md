@@ -17,9 +17,15 @@ Go 版声明式路由库的 Rust 迁移版 —— 基于 actix-web 4 的**声明
 
 参数：`path`（缺省 `/`，`:id` 自动改写 `{id}`）、`tag`（唯一标识，缺省为方法
 完整模块路径 `crate::模块::…::函数名`，如 `demo_server::controllers::login::info`，
-重复 panic）、`middleware = {a, b}`（花括号集合或裸路径）、
-`desc`、`auth`（缺省继承 分组 > 全局 > false）、`group`（分组完整前缀）、
+重复 panic）、`middleware = {a, b}`（花括号集合或裸路径）、`desc`、
+`title` / `front_path` / `is_data_auth`（元数据：标题 / 前端菜单路由 / 数据权限）、
+`auth`（缺省继承 分组 > 全局 > false）、`group`（分组完整前缀）、
 `cancel_global_prefix` / `cancel_global_api_prefix`。
+
+路由工具函数：`unique(method, path)`（`"METHOD@path"` 唯一键）、
+`uni_md5(method, path)`（唯一键 MD5，前端权限码常用）、`search(method, url)`
+（按模式查找路由 + 提取参数实际值）、`exist(method, url)`、
+`route_table()` / `print_route_table()`。
 
 ## 快速开始
 

@@ -52,6 +52,11 @@ async fn main() -> std::io::Result<()> {
         "exist GET /api/v1/user/42 -> {}",
         hirust_router::exist("GET", "/api/v1/user/42")
     );
+    // 路由唯一键 MD5（对应 Go UniMd5，前端权限码常用）
+    println!(
+        "uni_md5(PUT@/api/v1/user/{{id}}) -> {}",
+        hirust_router::uni_md5("PUT", "/api/v1/user/{id}")
+    );
 
     let state = AppState::default();
     println!("listening on http://127.0.0.1:8080");

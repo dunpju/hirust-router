@@ -56,7 +56,11 @@ struct PlannedRoute {
     relative_path: String,
     tag: String,
     desc: String,
+    title: String,
+    front_path: String,
+    is_data_auth: bool,
     auth: bool,
+    service: String,
     middleware_names: Vec<String>,
     attach: fn(Resource) -> Resource,
 }
@@ -137,7 +141,11 @@ fn build_plan(config: &RouterConfig) -> Vec<PlannedRoute> {
             relative_path: entry.path.to_string(),
             tag: entry.tag.to_string(),
             desc: entry.desc.to_string(),
+            title: entry.title.to_string(),
+            front_path: entry.front_path.to_string(),
+            is_data_auth: entry.is_data_auth.unwrap_or(false),
             auth,
+            service: config.service.clone(),
             middleware_names: entry
                 .middleware_names
                 .iter()
@@ -170,7 +178,11 @@ pub fn configure_with(cfg: &mut ServiceConfig, config: &RouterConfig) {
                 absolute_path: route.full_path.clone(),
                 tag: route.tag.clone(),
                 desc: route.desc.clone(),
+                title: route.title.clone(),
+                front_path: route.front_path.clone(),
+                is_data_auth: route.is_data_auth,
                 auth: route.auth,
+                service: route.service.clone(),
                 middleware_names: route.middleware_names.clone(),
             })
             .collect()

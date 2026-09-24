@@ -19,6 +19,13 @@ pub struct RouteEntry {
     pub tag: &'static str,
     /// 接口描述（对应 Route.desc）
     pub desc: &'static str,
+    /// 标题（对应 Route.title，元数据；供 API 文档/菜单生成等外部系统消费）
+    pub title: &'static str,
+    /// 前端菜单路由（对应 Route.frontPath，元数据）
+    pub front_path: &'static str,
+    /// 数据权限（对应 Route.isDataAuth，元数据；
+    /// None = 未声明默认 false —— Go 版的组级数据鉴权继承未迁移）
+    pub is_data_auth: Option<bool>,
     /// 是否鉴权（对应 Route.isAuth）。
     /// None = 未显式声明 → 继承分组/全局配置，最终默认 false；Some(v) = 显式声明
     pub auth: Option<bool>,
@@ -45,6 +52,12 @@ pub fn unique(method: &str, absolute_path: &str) -> String {
     format!("{}@{}", method.to_uppercase(), absolute_path)
 }
 
+/// 路由唯一键的 MD5 —— 对应 Go `UniMd5(method, absolutePath)`。
+/// 非安全用途（常用作前端权限系统的权限码）。
+pub fn uni_md5(method: &str, absolute_path: &str) -> String {
+    crate::md5::md5_hex(unique(method, absolute_path).as_bytes())
+}
+
 /// configure 完成后的最终路由信息（路由表的一行，对应 Go `Routes.ForEach` 遍历到的 Route）。
 #[derive(Clone, Debug)]
 pub struct RouteInfo {
@@ -57,7 +70,15 @@ pub struct RouteInfo {
     pub absolute_path: String,
     pub tag: String,
     pub desc: String,
+    /// 标题（对应 Route.title）
+    pub title: String,
+    /// 前端菜单路由（对应 Route.frontPath）
+    pub front_path: String,
+    /// 数据权限（对应 Route.isDataAuth）
+    pub is_data_auth: bool,
     pub auth: bool,
+    /// 服务名（对应 Route.serve；单 App 下为标签，取首个 configure 的配置）
+    pub service: String,
     pub middleware_names: Vec<String>,
 }
 
@@ -65,6 +86,11 @@ impl RouteInfo {
     /// 唯一键（METHOD@绝对路径）
     pub fn unique(&self) -> String {
         unique(&self.method, &self.absolute_path)
+    }
+
+    /// 唯一键的 MD5（对应 Go UniMd5）
+    pub fn uni_md5(&self) -> String {
+        uni_md5(&self.method, &self.absolute_path)
     }
 
     /// 单行文本（打印路由表用）

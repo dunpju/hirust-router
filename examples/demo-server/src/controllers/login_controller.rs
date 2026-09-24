@@ -9,7 +9,8 @@ use crate::models::{ApiResponse, LoginRequest, LoginResponse, UserInfo};
 use crate::state::AppState;
 
 /// 登录：POST /api/v1/login
-#[PostMapping(path = "/login", tag = "LoginController.Login", desc = "用户登录", auth = false)]
+#[PostMapping(path = "/login", tag = "LoginController.Login", desc = "用户登录",
+              title = "登录", front_path = "/login", is_data_auth = false, auth = false)]
 async fn login(
     payload: web::Json<LoginRequest>,
     data: Data<AppState>,

@@ -11,6 +11,9 @@
 //!   即 `module_path!() + "::" + 函数名`，如 `demo_server::controllers::login::info`；重复注册 panic）
 //! - `middleware = {a::m1, a::m2}`  中间件（花括号集合，也可写单个裸路径）
 //! - `desc = "用户信息"`      接口描述
+//! - `title = "用户信息"`     标题（元数据，对应 Go Route.title）
+//! - `front_path = "/login"` 前端菜单路由（元数据，对应 Go Route.frontPath）
+//! - `is_data_auth = true`   数据权限标记（元数据，对应 Go Route.isDataAuth；缺省 false）
 //! - `auth = true|false`     是否鉴权（缺省继承组/全局配置，最终默认 false）
 //! - `group = "/admin"`      归属分组前缀（可选，对应 Go AddGroup）
 //! - `cancel_global_prefix = true`  拼接路径时跳过全局组前缀（对应 CancelGlobalGroupPrefix）
@@ -49,6 +52,12 @@ struct MappingArgs {
     path: String,
     tag: Option<String>,
     desc: String,
+    /// 标题（元数据，对应 Go Route.title）
+    title: String,
+    /// 前端菜单路由（元数据，对应 Go Route.frontPath）
+    front_path: String,
+    /// 数据权限标记（元数据，对应 Go Route.isDataAuth；None = 缺省 false）
+    is_data_auth: Option<bool>,
     /// None = 未显式声明（继承组/全局，最终默认 false）；Some(v) = 显式声明
     auth: Option<bool>,
     group: String,
@@ -63,6 +72,9 @@ impl MappingArgs {
             path: String::new(),
             tag: None,
             desc: String::new(),
+            title: String::new(),
+            front_path: String::new(),
+            is_data_auth: None,
             auth: None,
             group: String::new(),
             cancel_global_prefix: false,
@@ -89,6 +101,18 @@ impl Parse for MappingArgs {
                 "desc" => {
                     input.parse::<Token![=]>()?;
                     args.desc = input.parse::<LitStr>()?.value();
+                }
+                "title" => {
+                    input.parse::<Token![=]>()?;
+                    args.title = input.parse::<LitStr>()?.value();
+                }
+                "front_path" => {
+                    input.parse::<Token![=]>()?;
+                    args.front_path = input.parse::<LitStr>()?.value();
+                }
+                "is_data_auth" => {
+                    input.parse::<Token![=]>()?;
+                    args.is_data_auth = Some(input.parse::<LitBool>()?.value);
                 }
                 "auth" => {
                     input.parse::<Token![=]>()?;
@@ -122,7 +146,8 @@ impl Parse for MappingArgs {
                 other => {
                     return Err(input.error(format!(
                         "unknown argument `{}`; expected one of: path, tag, middleware, \
-                         desc, auth, group, cancel_global_prefix, cancel_global_api_prefix",
+                         desc, title, front_path, is_data_auth, auth, group, \
+                         cancel_global_prefix, cancel_global_api_prefix",
                         other
                     )));
                 }
@@ -242,7 +267,13 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
     let path_normalized = normalize_path(if args.path.is_empty() { "/" } else { &args.path });
     let group = &args.group;
     let desc = &args.desc;
+    let title = &args.title;
+    let front_path = &args.front_path;
     let auth_flag = args.auth;
+    let is_data_auth_opt_tokens = match args.is_data_auth {
+        Some(v) => quote! { ::core::option::Option::Some(#v) },
+        None => quote! { ::core::option::Option::None },
+    };
 
     // 中间件名列表（仅用于路由表展示）
     let mw_names: Vec<String> = args
@@ -349,6 +380,9 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
                 path: #path_normalized,
                 tag: #tag_expr,
                 desc: #desc,
+                title: #title,
+                front_path: #front_path,
+                is_data_auth: #is_data_auth_opt_tokens,
                 auth: #auth_opt_tokens,
                 group: #group,
                 middleware_names: &[#(#mw_names),*],
