@@ -40,7 +40,7 @@ use syn::{
     parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
-    FnArg, Ident, ItemFn, LitBool, LitStr, Path, Pat, Token,
+    FnArg, Ident, ItemFn, LitBool, LitStr, Pat, Path, Token,
 };
 
 // ---------------------------------------------------------------------------
@@ -136,8 +136,7 @@ impl Parse for MappingArgs {
                     if input.peek(syn::token::Brace) {
                         let content;
                         braced!(content in input);
-                        let list =
-                            Punctuated::<Path, Token![,]>::parse_terminated(&content)?;
+                        let list = Punctuated::<Path, Token![,]>::parse_terminated(&content)?;
                         args.middleware.extend(list);
                     } else {
                         args.middleware.push(input.parse::<Path>()?);
@@ -237,7 +236,10 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
     if sig.asyncness.is_none() {
         return syn::Error::new_spanned(
             sig.fn_token,
-            format!("#{}Mapping handler must be `async fn`", method.to_lowercase()),
+            format!(
+                "#{}Mapping handler must be `async fn`",
+                method.to_lowercase()
+            ),
         )
         .to_compile_error();
     }
@@ -261,10 +263,16 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
     // 对应 Go 版 flag 缺省取 runtime.FuncForPC 函数名的兜底语义
     let tag_expr = match &args.tag {
         Some(tag) => quote! { #tag },
-        None => quote! { ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#fn_ident)) },
+        None => {
+            quote! { ::core::concat!(::core::module_path!(), "::", ::core::stringify!(#fn_ident)) }
+        }
     };
 
-    let path_normalized = normalize_path(if args.path.is_empty() { "/" } else { &args.path });
+    let path_normalized = normalize_path(if args.path.is_empty() {
+        "/"
+    } else {
+        &args.path
+    });
     let group = &args.group;
     let desc = &args.desc;
     let title = &args.title;
@@ -310,14 +318,17 @@ fn expand(method: &str, args: MappingArgs, item: ItemFn) -> TokenStream2 {
         }
     });
     // 原 fn 中除 HttpRequest 外的参数：在中间件链之后手动提取
-    let extractions = params.iter().filter(|(_, ty)| !is_http_request_type(ty)).map(|(pat, ty)| {
-        quote! {
-            #[allow(unused_variables)]
-            let #pat = <#ty as ::actix_web::FromRequest>::from_request(
-                &__hirust_req, &mut __hirust_payload,
-            ).await.map_err(::core::convert::Into::<::actix_web::Error>::into)?;
-        }
-    });
+    let extractions = params
+        .iter()
+        .filter(|(_, ty)| !is_http_request_type(ty))
+        .map(|(pat, ty)| {
+            quote! {
+                #[allow(unused_variables)]
+                let #pat = <#ty as ::actix_web::FromRequest>::from_request(
+                    &__hirust_req, &mut __hirust_payload,
+                ).await.map_err(::core::convert::Into::<::actix_web::Error>::into)?;
+            }
+        });
     // 调用参数：HttpRequest 参数传 clone（携带中间件注入的 extensions），其余按名转发
     let call_args = params.iter().map(|(pat, ty)| {
         if is_http_request_type(ty) {
@@ -413,7 +424,10 @@ macro_rules! mapping_macro {
     };
 }
 
-mapping_macro!(GetMapping, "GET", r##"Register a GET route（Go 版 `router.Get`）.
+mapping_macro!(
+    GetMapping,
+    "GET",
+    r##"Register a GET route（Go 版 `router.Get`）.
 
 # 用法
 
@@ -493,9 +507,13 @@ fn __hirust_attach_info(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(PostMapping, "POST", r##"Register a POST route（Go 版 `router.Post`）.
+mapping_macro!(
+    PostMapping,
+    "POST",
+    r##"Register a POST route（Go 版 `router.Post`）.
 
 # 用法
 
@@ -563,9 +581,13 @@ fn __hirust_attach_login(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(PutMapping, "PUT", r##"Register a PUT route（Go 版 `router.Put`）.
+mapping_macro!(
+    PutMapping,
+    "PUT",
+    r##"Register a PUT route（Go 版 `router.Put`）.
 
 # 用法
 
@@ -635,9 +657,13 @@ fn __hirust_attach_update(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(DeleteMapping, "DELETE", r##"Register a DELETE route（Go 版 `router.Delete`）.
+mapping_macro!(
+    DeleteMapping,
+    "DELETE",
+    r##"Register a DELETE route（Go 版 `router.Delete`）.
 
 # 用法
 
@@ -701,9 +727,13 @@ fn __hirust_attach_delete(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(HeadMapping, "HEAD", r##"Register a HEAD route（Go 版 `router.Head`）.
+mapping_macro!(
+    HeadMapping,
+    "HEAD",
+    r##"Register a HEAD route（Go 版 `router.Head`）.
 
 # 用法
 
@@ -763,9 +793,13 @@ fn __hirust_attach_ping(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(PatchMapping, "PATCH", r##"Register a PATCH route（Go 版 `router.Patch`）.
+mapping_macro!(
+    PatchMapping,
+    "PATCH",
+    r##"Register a PATCH route（Go 版 `router.Patch`）.
 
 # 用法
 
@@ -828,9 +862,13 @@ fn __hirust_attach_patch(res: ::actix_web::Resource) -> ::actix_web::Resource {
     }
 }
 ```
-"##);
+"##
+);
 
-mapping_macro!(OptionsMapping, "OPTIONS", r##"Register an OPTIONS route（Go 版 `router.AddRoute("OPTIONS", ...)`）.
+mapping_macro!(
+    OptionsMapping,
+    "OPTIONS",
+    r##"Register an OPTIONS route（Go 版 `router.AddRoute("OPTIONS", ...)`）.
 
 # 用法
 
@@ -890,4 +928,5 @@ fn __hirust_attach_preflight(res: ::actix_web::Resource) -> ::actix_web::Resourc
     }
 }
 ```
-"##);
+"##
+);

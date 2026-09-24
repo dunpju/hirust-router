@@ -1,7 +1,7 @@
 //! 中间件示例 —— 与 Go 版原项目的前置函数同构：
 //! `async fn(HttpRequest) -> Result<HttpRequest, actix_web::Error>`
 
-use actix_web::{Error, HttpRequest, HttpMessage};
+use actix_web::{Error, HttpMessage, HttpRequest};
 
 use crate::models::UserInfo;
 
@@ -27,7 +27,10 @@ pub async fn my_auth_middleware(req: HttpRequest) -> Result<HttpRequest, Error> 
         .and_then(|value| value.to_str().ok())
         .and_then(|token| token.strip_prefix("secret-token"))
         .and_then(|suffix| suffix.parse::<u64>().ok())
-        .map(|id| UserInfo { id, username: format!("user-{}", id) });
+        .map(|id| UserInfo {
+            id,
+            username: format!("user-{}", id),
+        });
     req.extensions_mut().insert(user);
     Ok(req)
 }

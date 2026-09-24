@@ -30,10 +30,18 @@ pub struct ApiResponse<T: Serialize> {
 
 impl<T: Serialize> ApiResponse<T> {
     pub fn ok(data: T) -> Self {
-        Self { code: 0, message: "ok".into(), data: Some(data) }
+        Self {
+            code: 0,
+            message: "ok".into(),
+            data: Some(data),
+        }
     }
 
     pub fn err(message: &str) -> Self {
-        Self { code: 1, message: message.into(), data: None }
+        Self {
+            code: 1,
+            message: message.into(),
+            data: None,
+        }
     }
 }

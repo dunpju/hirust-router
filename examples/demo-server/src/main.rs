@@ -15,7 +15,7 @@ mod middlewares;
 mod models;
 mod state;
 
-use actix_web::{App, HttpServer, web};
+use actix_web::{web, App, HttpServer};
 
 use crate::middlewares::auth::jwt_check;
 use crate::state::AppState;

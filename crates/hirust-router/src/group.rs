@@ -118,7 +118,10 @@ fn chain_of(groups: &[GroupDef], prefix: &str) -> Vec<GroupDef> {
     while let Some(current) = cursor {
         guard += 1;
         if guard > 64 {
-            panic!("hirust-router: group chain too deep or cyclic at {}", prefix);
+            panic!(
+                "hirust-router: group chain too deep or cyclic at {}",
+                prefix
+            );
         }
         match groups.iter().find(|group| group.full == current) {
             Some(group) => {

@@ -12,8 +12,8 @@
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-use actix_web::Resource;
 use actix_web::web::{self, ServiceConfig};
+use actix_web::Resource;
 
 use crate::group;
 use crate::route::{RouteEntry, RouteInfo};
@@ -204,7 +204,10 @@ pub fn configure_with(cfg: &mut ServiceConfig, config: &RouterConfig) {
     // 规避 actix "同 path 多 resource" 冲突；各方法自带独立的中间件链。
     let mut by_path: BTreeMap<&str, Vec<&PlannedRoute>> = BTreeMap::new();
     for route in plan {
-        by_path.entry(route.full_path.as_str()).or_default().push(route);
+        by_path
+            .entry(route.full_path.as_str())
+            .or_default()
+            .push(route);
     }
     for (path, routes) in by_path {
         let mut resource: Resource = web::resource(path);
@@ -247,7 +250,10 @@ pub fn search(method: &str, url: &str) -> Option<SearchResult> {
     let table = TABLE.get()?;
     let hit = trie.search(method, url)?;
     let route = table.get(*hit.value).cloned()?;
-    Some(SearchResult { route, params: hit.params.clone() })
+    Some(SearchResult {
+        route,
+        params: hit.params.clone(),
+    })
 }
 
 /// 路由是否存在（URL 可含实际参数值；对应 Go `Routes.Exist`）。
@@ -265,8 +271,8 @@ pub fn route_table() -> Vec<RouteInfo> {
 pub fn print_route_table() {
     let table = route_table();
     println!(
-        "{:<7} {:<40} {:<56} {:<6} {}",
-        "METHOD", "PATH", "TAG", "AUTH", "MIDDLEWARE"
+        "{:<7} {:<40} {:<56} {:<6} MIDDLEWARE",
+        "METHOD", "PATH", "TAG", "AUTH"
     );
     println!("{}", "-".repeat(150));
     for info in &table {

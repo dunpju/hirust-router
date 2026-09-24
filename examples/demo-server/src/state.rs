@@ -20,8 +20,14 @@ impl AppState {
     /// 模拟从存储读取用户信息
     pub fn find_user(&self, id: u64) -> Option<UserInfo> {
         match id {
-            1 => Some(UserInfo { id: 1, username: "admin".to_string() }),
-            2 => Some(UserInfo { id: 2, username: "dunpju".to_string() }),
+            1 => Some(UserInfo {
+                id: 1,
+                username: "admin".to_string(),
+            }),
+            2 => Some(UserInfo {
+                id: 2,
+                username: "dunpju".to_string(),
+            }),
             _ => None,
         }
     }

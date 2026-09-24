@@ -46,18 +46,17 @@ pub use inventory as __inventory;
 
 // 五个 Mapping 宏（及 Go 版同源的 Patch/Options）
 pub use hirust_router_macro::{
-    DeleteMapping, GetMapping, HeadMapping, OptionsMapping, PatchMapping, PostMapping,
-    PutMapping,
+    DeleteMapping, GetMapping, HeadMapping, OptionsMapping, PatchMapping, PostMapping, PutMapping,
 };
 
 pub use group::{add_group, find_group};
 // boxed_middleware 是 #[macro_export] 宏，已位于 crate 根
 pub use middleware::{
-    default_auth, set_auth_validator, set_global_middleware, AuthValidator,
-    BoxMiddlewareFuture, SimpleMiddleware,
+    default_auth, set_auth_validator, set_global_middleware, AuthValidator, BoxMiddlewareFuture,
+    SimpleMiddleware,
 };
 pub use registry::{
-    configure, configure_named, configure_with, exist, print_route_table, route_table,
-    search, RouterConfig, SearchResult, ONLY_SUPPORT_METHODS,
+    configure, configure_named, configure_with, exist, print_route_table, route_table, search,
+    RouterConfig, SearchResult, ONLY_SUPPORT_METHODS,
 };
 pub use route::{uni_md5, unique, RouteInfo};

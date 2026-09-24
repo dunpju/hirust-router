@@ -22,7 +22,10 @@ async fn update(
     _data: Data<AppState>,
 ) -> impl Responder {
     let id = path.0;
-    web::Json(ApiResponse::ok(UserInfo { id, username: payload.username.clone() }))
+    web::Json(ApiResponse::ok(UserInfo {
+        id,
+        username: payload.username.clone(),
+    }))
 }
 
 /// 删除用户：DELETE /api/v1/user/{id}
@@ -33,18 +36,33 @@ async fn delete(path: Path<(u64,)>, data: Data<AppState>) -> impl Responder {
 }
 
 /// 局部更新：PATCH /api/v1/user/{id}
-#[PatchMapping(path = "/user/:id", tag = "UserController.Patch", desc = "局部更新用户")]
+#[PatchMapping(
+    path = "/user/:id",
+    tag = "UserController.Patch",
+    desc = "局部更新用户"
+)]
 async fn patch(path: Path<(u64,)>) -> impl Responder {
     web::Json(ApiResponse::ok(format!("patched {}", path.0)))
 }
 
 /// 分组路由：GET /api/v1/admin/user/list
 /// group = "/admin" 对应 Go：AddGroup("/admin", func(){ Get("/user/list", ...) })
-#[GetMapping(path = "/user/list", group = "/admin", tag = "UserController.AdminList", desc = "后台用户列表(分组)")]
+#[GetMapping(
+    path = "/user/list",
+    group = "/admin",
+    tag = "UserController.AdminList",
+    desc = "后台用户列表(分组)"
+)]
 async fn admin_list(_data: Data<AppState>) -> impl Responder {
     web::Json(ApiResponse::ok(vec![
-        UserInfo { id: 1, username: "admin".to_string() },
-        UserInfo { id: 2, username: "dunpju".to_string() },
+        UserInfo {
+            id: 1,
+            username: "admin".to_string(),
+        },
+        UserInfo {
+            id: 2,
+            username: "dunpju".to_string(),
+        },
     ]))
 }
 
@@ -55,7 +73,7 @@ async fn admin_list(_data: Data<AppState>) -> impl Responder {
     desc = "健康检查(取消全局前缀)",
     cancel_global_prefix = true,
     cancel_global_api_prefix = true,
-    auth = false,
+    auth = false
 )]
 async fn health(req: HttpRequest, data: Data<AppState>) -> impl Responder {
     web::Json(ApiResponse::ok(format!(

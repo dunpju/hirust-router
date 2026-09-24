@@ -59,7 +59,11 @@ struct Node<T> {
 
 impl<T> Default for Node<T> {
     fn default() -> Self {
-        Self { children: BTreeMap::new(), param_child: None, terminal: None }
+        Self {
+            children: BTreeMap::new(),
+            param_child: None,
+            terminal: None,
+        }
     }
 }
 
@@ -71,7 +75,9 @@ pub struct Trie<T> {
 
 impl<T> Default for Trie<T> {
     fn default() -> Self {
-        Self { roots: BTreeMap::new() }
+        Self {
+            roots: BTreeMap::new(),
+        }
     }
 }
 
@@ -125,7 +131,10 @@ impl<T> Trie<T> {
     /// 按具体 URL 查找（参数段提取实际值；对应 Go Trie.Search）。
     pub fn search<'a>(&'a self, method: &str, url: &str) -> Option<Match<'a, T>> {
         let root = self.roots.get(&method.to_uppercase())?;
-        let segments: Vec<&str> = url.split('/').filter(|segment| !segment.is_empty()).collect();
+        let segments: Vec<&str> = url
+            .split('/')
+            .filter(|segment| !segment.is_empty())
+            .collect();
         let (value, params) = match_node(root, &segments)?;
         Some(Match { value, params })
     }
@@ -170,7 +179,10 @@ mod tests {
         assert_eq!(*hit.value, "two");
         assert_eq!(
             hit.params,
-            vec![("id".to_string(), "1".to_string()), ("name".to_string(), "gg".to_string())]
+            vec![
+                ("id".to_string(), "1".to_string()),
+                ("name".to_string(), "gg".to_string())
+            ]
         );
 
         let hit = trie.search("HEAD", "/y1/y2/y3/head_test/1/gg/tt").unwrap();
@@ -180,7 +192,9 @@ mod tests {
         assert!(trie.search("HEAD", "/y1/y2/y3/head_test/1").is_none());
         assert!(trie.search("GET", "/y1/y2/y3/head_test/1/gg").is_none());
         // 超出模式长度 → 未命中
-        assert!(trie.search("HEAD", "/y1/y2/y3/head_test/1/gg/tt/extra").is_none());
+        assert!(trie
+            .search("HEAD", "/y1/y2/y3/head_test/1/gg/tt/extra")
+            .is_none());
     }
 
     #[test]
@@ -188,7 +202,10 @@ mod tests {
         let mut trie = Trie::new();
         trie.insert("GET", "/user/:id", 1);
         assert!(trie.has("GET", "/user/{id}"));
-        assert!(trie.has("GET", "/user/:uid"), "同位置参数段共享节点（名字首个注册者生效）");
+        assert!(
+            trie.has("GET", "/user/:uid"),
+            "同位置参数段共享节点（名字首个注册者生效）"
+        );
         let hit = trie.search("GET", "/user/42").unwrap();
         assert_eq!(hit.params, vec![("id".to_string(), "42".to_string())]);
     }

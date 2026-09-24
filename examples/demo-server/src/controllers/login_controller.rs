@@ -9,14 +9,20 @@ use crate::models::{ApiResponse, LoginRequest, LoginResponse, UserInfo};
 use crate::state::AppState;
 
 /// 登录：POST /api/v1/login
-#[PostMapping(path = "/login", tag = "LoginController.Login", desc = "用户登录",
-              title = "登录", front_path = "/login", is_data_auth = false, auth = false)]
-async fn login(
-    payload: web::Json<LoginRequest>,
-    data: Data<AppState>,
-) -> impl Responder {
+#[PostMapping(
+    path = "/login",
+    tag = "LoginController.Login",
+    desc = "用户登录",
+    title = "登录",
+    front_path = "/login",
+    is_data_auth = false,
+    auth = false
+)]
+async fn login(payload: web::Json<LoginRequest>, data: Data<AppState>) -> impl Responder {
     if payload.username.is_empty() || payload.password.is_empty() {
-        return web::Json(ApiResponse::<LoginResponse>::err("username/password required"));
+        return web::Json(ApiResponse::<LoginResponse>::err(
+            "username/password required",
+        ));
     }
     let _ = &data.app_name;
     web::Json(ApiResponse::ok(LoginResponse {
@@ -52,7 +58,12 @@ async fn info(
 }
 
 /// 需要默认鉴权（Bearer Token）：GET /api/v1/profile
-#[GetMapping(path = "/profile", tag = "LoginController.Profile", desc = "个人中心(需鉴权)", auth = true)]
+#[GetMapping(
+    path = "/profile",
+    tag = "LoginController.Profile",
+    desc = "个人中心(需鉴权)",
+    auth = true
+)]
 async fn profile(data: Data<AppState>) -> impl Responder {
     web::Json(ApiResponse::ok(UserInfo {
         id: 1,
@@ -61,7 +72,12 @@ async fn profile(data: Data<AppState>) -> impl Responder {
 }
 
 /// 探活：HEAD /api/v1/ping
-#[HeadMapping(path = "/ping", tag = "LoginController.Ping", desc = "探活", auth = false)]
+#[HeadMapping(
+    path = "/ping",
+    tag = "LoginController.Ping",
+    desc = "探活",
+    auth = false
+)]
 async fn ping() -> impl Responder {
     actix_web::HttpResponse::Ok().finish()
 }
@@ -70,5 +86,8 @@ async fn ping() -> impl Responder {
 /// 未写 tag —— 缺省使用方法完整模块路径：demo_server::controllers::login_controller::dashboard
 #[GetMapping(path = "/dashboard", desc = "仪表盘(缺省tag=完整模块路径)")]
 async fn dashboard(data: Data<AppState>) -> impl Responder {
-    web::Json(ApiResponse::ok(format!("{} v{}", data.app_name, data.version)))
+    web::Json(ApiResponse::ok(format!(
+        "{} v{}",
+        data.app_name, data.version
+    )))
 }
